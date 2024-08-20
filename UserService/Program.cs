@@ -15,12 +15,14 @@ using SameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode;
 var jwtIssuer = Environment.GetEnvironmentVariable("JwtIssuer");
 var jwtAudience = Environment.GetEnvironmentVariable("JwtAudience");
 var jwtSecurityKey = Environment.GetEnvironmentVariable("JwtSecurityKey");
+var dataProtectionSharedFolder = Environment.GetEnvironmentVariable("DataProtectionFolder");
 
 if (string.IsNullOrEmpty(jwtIssuer) ||
     string.IsNullOrEmpty(jwtAudience) ||
-    string.IsNullOrEmpty(jwtSecurityKey))
+    string.IsNullOrEmpty(jwtSecurityKey) ||
+    string.IsNullOrEmpty(dataProtectionSharedFolder))
 {
-    Console.WriteLine("Please check JwtIssuer, JwtAudience and JwtSecurityKey environment variables.");
+    Console.WriteLine("Please check DataProtectionFolder, JwtIssuer, JwtAudience and JwtSecurityKey environment variables as one or more are missing.");
     Environment.Exit(1);
 }
 
@@ -149,7 +151,7 @@ builder.Services.AddAuthorizationBuilder()
     });
 
 builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo(@"C:\Users\frank\Documents\DEV\temp"))
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionSharedFolder))
     .SetApplicationName("BlazorCookieAuth");
 
 builder.Services.AddCors(options =>
