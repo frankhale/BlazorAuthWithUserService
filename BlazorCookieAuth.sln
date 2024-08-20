@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35122.118
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorCookieAuth", "BlazorCookieAuth\BlazorCookieAuth\BlazorCookieAuth.csproj", "{5CFC8CCD-555A-402B-BA4A-3C9BABDFFD11}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorCookieAuth.Client", "BlazorCookieAuth\BlazorCookieAuth.Client\BlazorCookieAuth.Client.csproj", "{B5C01049-8FAA-4736-AF75-8EE1A2ED4BE4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserService", "UserService\UserService.csproj", "{4E3C18B1-E97E-490B-B14A-0F01DFACA7EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{0B6D93E8-69DE-401A-B599-22A0915FEA49}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5CFC8CCD-555A-402B-BA4A-3C9BABDFFD11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CFC8CCD-555A-402B-BA4A-3C9BABDFFD11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CFC8CCD-555A-402B-BA4A-3C9BABDFFD11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CFC8CCD-555A-402B-BA4A-3C9BABDFFD11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5C01049-8FAA-4736-AF75-8EE1A2ED4BE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5C01049-8FAA-4736-AF75-8EE1A2ED4BE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5C01049-8FAA-4736-AF75-8EE1A2ED4BE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5C01049-8FAA-4736-AF75-8EE1A2ED4BE4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E3C18B1-E97E-490B-B14A-0F01DFACA7EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E3C18B1-E97E-490B-B14A-0F01DFACA7EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E3C18B1-E97E-490B-B14A-0F01DFACA7EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E3C18B1-E97E-490B-B14A-0F01DFACA7EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B6D93E8-69DE-401A-B599-22A0915FEA49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B6D93E8-69DE-401A-B599-22A0915FEA49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B6D93E8-69DE-401A-B599-22A0915FEA49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B6D93E8-69DE-401A-B599-22A0915FEA49}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C629EB72-1113-49B6-BDC5-A81D5EE1417E}
+	EndGlobalSection
+EndGlobal

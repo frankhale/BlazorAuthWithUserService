@@ -1,0 +1,18 @@
+﻿@page "/logout"
+
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpContextAccessor.HttpContext != null)
+        {
+            await HttpContextAccessor.HttpContext.SignOutAsync();
+        }
+
+        NavigationManager.NavigateTo("/", true);
+    }
+
+}

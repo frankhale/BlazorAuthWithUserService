@@ -1,0 +1,26 @@
+﻿@page "/"
+@using System.Security.Claims
+
+<PageTitle>Home</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        <h1>Hello, @context.User.Identity?.Name!</h1>
+        <div>
+            <b>User Claims</b>
+            <ul>
+                <li>Name - @context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value</li>
+                <li>Email - @context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value</li>
+                <li>Role - @context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value</li>
+                <li>Jwt - @((context.User.Claims.FirstOrDefault(c => c.Type == "Jwt")?.Value)?[..10])...</li>
+            </ul>
+        </div>
+        
+    </Authorized>
+
+    <NotAuthorized>
+        <h1>Hello, world!</h1>
+    </NotAuthorized>
+</AuthorizeView>
+
+Welcome to your new app.
