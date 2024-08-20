@@ -39,7 +39,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/forbidden";
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromDays(30);
-        options.Cookie.SameSite = SameSiteMode.None;
+        options.Cookie.SameSite = SameSiteMode.Strict;
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.Name = "BlazorCookieAuth";
