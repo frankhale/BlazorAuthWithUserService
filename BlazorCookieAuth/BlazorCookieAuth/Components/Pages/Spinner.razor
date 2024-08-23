@@ -1,16 +1,10 @@
 ﻿@page "/Spinner"
-
-@using System.Security.Claims
-@using Common
-@using System.Text.Json
-@using Microsoft.Net.Http.Headers
-
-@inject ILogger<Login> Logger
-
 @layout EmptyLayout
 
+@rendermode InteractiveServer
+
+@inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
-@inject IHttpClientFactory HttpClientFactory
 
 <div class="spinner-wrapper">
     <div class="spinner-border" role="status">
@@ -19,71 +13,14 @@
 </div>
 
 @code {
-    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        HttpContext.Request.Cookies.TryGetValue("BlazorCookieAuth", out var authCookie);
-
-        if (!string.IsNullOrEmpty(authCookie))
+        if (firstRender)
         {
-            Logger.LogInformation(authCookie);
-
-            var userServiceClient = HttpClientFactory.CreateClient("MyHttpClient");
-            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7000/login");
-            var cookieHeader = new CookieHeaderValue("BlazorCookieAuth", authCookie);
-            request.Headers.Add("Cookie", cookieHeader.ToString());
-            var response = await userServiceClient.SendAsync(request);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var responseData = await response.Content.ReadAsStringAsync();
-
-                var userInfo = JsonSerializer.Deserialize<UserInfo>(responseData, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-
-                if (userInfo == null)
-                {
-                    NavigationManager.NavigateTo("/Forbidden");
-                }
-                
-                Logger.LogInformation($"Name: {userInfo?.Name}");
-                Logger.LogInformation($"Name: {userInfo?.Email}");
-                Logger.LogInformation($"Name: {userInfo?.Role}");
-
-                if (userInfo?.Name != null)
-                {
-                    var claims = new List<Claim>
-                    {
-                        new Claim(ClaimTypes.Name, userInfo.Name),
-                        new Claim(ClaimTypes.Email, userInfo.Email),
-                        new Claim(ClaimTypes.Role, userInfo.Role),
-                        new Claim("Jwt", userInfo.Jwt ?? "Not Set"),
-                    };
-
-                    await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-                    
-                    var claimsIdentity = new ClaimsIdentity(
-                        claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        
-                    await HttpContext.SignInAsync(
-                        CookieAuthenticationDefaults.AuthenticationScheme,
-                        new ClaimsPrincipal(claimsIdentity),
-                        new AuthenticationProperties
-                        { 
-                            AllowRefresh = true,
-                            IsPersistent = true
-                        });
-                }
-
-                NavigationManager.NavigateTo("/");
-            }
-            else
-            {
-                NavigationManager.NavigateTo("/Forbidden");
-            }
+            await Task.Delay(1500);
+            NavigationManager.NavigateTo("/FinishLogin");
         }
     }
+    
 }

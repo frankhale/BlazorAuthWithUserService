@@ -22,7 +22,8 @@ if (string.IsNullOrEmpty(jwtIssuer) ||
     string.IsNullOrEmpty(jwtSecurityKey) ||
     string.IsNullOrEmpty(dataProtectionSharedFolder))
 {
-    Console.WriteLine("Please check DataProtectionFolder, JwtIssuer, JwtAudience and JwtSecurityKey environment variables as one or more are missing.");
+    Console.WriteLine(
+        "Please check DataProtectionFolder, JwtIssuer, JwtAudience and JwtSecurityKey environment variables as one or more are missing.");
     Environment.Exit(1);
 }
 
@@ -32,49 +33,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "User Service API", Version = "v1" });
-
-    c.AddSecurityDefinition("CookieAuth", new OpenApiSecurityScheme
-    {
-        Type = SecuritySchemeType.ApiKey,
-        In = ParameterLocation.Cookie,
-        Name = "BlazorCookieAuth",
-        Scheme = "CookieAuth"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "CookieAuth"
-                }
-            },
-            new List<string>()
-        }
-    });
 });
-
-// builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-//     .AddCookie(options =>
-//     {
-//         options.Events.OnRedirectToLogin = context =>
-//         {
-//             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-//             return Task.CompletedTask;
-//         };
-//         options.Events.OnRedirectToAccessDenied = context =>
-//         {
-//             context.Response.StatusCode = StatusCodes.Status403Forbidden;
-//             return Task.CompletedTask;
-//         };
-//
-//         options.Cookie.Name = "BlazorCookieAuth";
-//         options.Cookie.SameSite = SameSiteMode.None; // Required for cross-site
-//         options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Secure is mandatory for SameSite=None
-//     });
 
 // REF: https://weblog.west-wind.com/posts/2022/Mar/29/Combining-Bearer-Token-and-Cookie-Auth-in-ASPNET
 builder.Services.AddAuthentication(options =>
@@ -166,6 +125,8 @@ builder.Services.AddCors(options =>
         });
 });
 
+//builder.Services.AddFluxor();
+
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
@@ -180,15 +141,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "User Service API");
-        c.RoutePrefix = string.Empty; // Serve Swagger UI at the app's root
+        c.RoutePrefix = string.Empty;
     });
 }
 
 app.UseHttpsRedirection();
 
 app.UseMiddleware<RequestLoggingMiddleware>();
-
 app.UseCors("AllowLocalHost");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -219,13 +180,17 @@ app.MapGet("/login",
                 new Claim(ClaimTypes.Email, email),
                 new Claim(ClaimTypes.Role, "User"),
             });
-        
+
+        var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+
+        Console.WriteLine($"JWT: {jwt}");
+
         return Results.Json(new UserInfo
         {
             Name = userName,
             Email = email,
             Role = "User",
-            Jwt = new JwtSecurityTokenHandler().WriteToken(token)
+            Jwt = jwt
         });
     });
 

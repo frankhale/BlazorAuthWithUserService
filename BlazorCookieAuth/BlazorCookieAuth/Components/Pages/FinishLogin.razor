@@ -1,0 +1,77 @@
+﻿@page "/FinishLogin"
+@layout EmptyLayout
+
+@inject ILogger<Login> Logger
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory HttpClientFactory
+@inject IHttpContextAccessor HttpContextAccessor 
+
+@code 
+{
+    protected override async Task OnInitializedAsync()
+    {
+        HttpContextAccessor.HttpContext!.Request.Cookies.TryGetValue("BlazorCookieAuth", out var authCookie);
+
+        if (!string.IsNullOrEmpty(authCookie))
+        {
+            Logger.LogInformation(authCookie);
+
+            var userServiceClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7000/login");
+            var cookieHeader = new CookieHeaderValue("BlazorCookieAuth", authCookie);
+            request.Headers.Add("Cookie", cookieHeader.ToString());
+            var response = await userServiceClient.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseData = await response.Content.ReadAsStringAsync();
+
+                var userInfo = JsonSerializer.Deserialize<UserInfo>(responseData, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (userInfo == null)
+                {
+                    NavigationManager.NavigateTo("/Forbidden");
+                }
+
+                Logger.LogInformation($"Name: {userInfo?.Name}");
+                Logger.LogInformation($"Name: {userInfo?.Email}");
+                Logger.LogInformation($"Name: {userInfo?.Role}");
+
+                if (userInfo?.Name != null)
+                {
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name, userInfo.Name),
+                        new Claim(ClaimTypes.Email, userInfo.Email),
+                        new Claim(ClaimTypes.Role, userInfo.Role),
+                        new Claim("Jwt", userInfo.Jwt ?? "Not Set"),
+                    };
+                    
+                    await HttpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+                    var claimsIdentity = new ClaimsIdentity(
+                        claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                    await HttpContextAccessor.HttpContext.SignInAsync(
+                        CookieAuthenticationDefaults.AuthenticationScheme,
+                        new ClaimsPrincipal(claimsIdentity),
+                        new AuthenticationProperties
+                        {
+                            AllowRefresh = true,
+                            IsPersistent = true
+                        });
+                }
+                
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/Forbidden");
+            }
+        }
+    }
+
+}

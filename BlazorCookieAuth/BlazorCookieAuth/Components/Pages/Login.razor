@@ -1,11 +1,8 @@
-﻿@page "/login"
+﻿@page "/Login"
 
 @using System.ComponentModel.DataAnnotations
-@using Microsoft.AspNetCore.Authentication
-@using Microsoft.AspNetCore.Authentication.Cookies
-@using System.Security.Claims
 
-@inject ILogger<Login> Logger
+@* @inject ILogger<Login> Logger *@
 @inject NavigationManager NavigationManager
 
 <PageTitle>Log in</PageTitle>
@@ -72,9 +69,9 @@
 
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, "John Doe"),
-            new Claim(ClaimTypes.Email, Input.Email),
-            new Claim(ClaimTypes.Role, "BasicUser"),
+            new(ClaimTypes.Name, "John Doe"),
+            new(ClaimTypes.Email, Input.Email),
+            new(ClaimTypes.Role, "BasicUser"),
         };
 
         var claimsIdentity = new ClaimsIdentity(
@@ -92,7 +89,7 @@
         // We need cookie to be available to send to the backend User Service so
         // we navigate to the /spinner page which will make the call out to the
         // User Service and get all of the claims for this user
-        NavigationManager.NavigateTo("/spinner");
+        NavigationManager.NavigateTo("/Spinner");
     }
 
     private sealed class InputModel
