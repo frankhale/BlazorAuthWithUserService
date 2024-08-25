@@ -1,3 +1,4 @@
+using AutoMapper;
 using Common;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -9,11 +10,13 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+using System.Reflection;
 using System.Text;
-using UserService;
+using UserService.AuthenticationAndAuthorization;
 using UserService.Data;
 using UserService.Data.Repository;
+using UserService.Helpers;
+using UserService.Middleware;
 using SameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode;
 
 var jwtIssuer = Environment.GetEnvironmentVariable("JwtIssuer");
@@ -43,9 +46,11 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddAuthentication(options =>
     {
         // custom scheme defined in .AddPolicyScheme() below
-        options.DefaultScheme = "JWT_OR_COOKIE";
-        options.DefaultChallengeScheme = "JWT_OR_COOKIE";
+        options.DefaultScheme = "API_JWT_OR_COOKIE";
+        options.DefaultChallengeScheme = "API_JWT_OR_COOKIE";
     })
+    .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
+        ApiKeyAuthenticationOptions.DefaultScheme, options => { })
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
     {
         options.Events.OnRedirectToLogin = context =>
@@ -75,15 +80,25 @@ builder.Services.AddAuthentication(options =>
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecurityKey)),
         };
     })
-    .AddPolicyScheme("JWT_OR_COOKIE", "JWT_OR_COOKIE", options =>
+    .AddPolicyScheme("API_JWT_OR_COOKIE", "API_JWT_OR_COOKIE", options =>
     {
         // runs on each request
         options.ForwardDefaultSelector = context =>
         {
             // filter by auth type
             string? authorization = context.Request.Headers[HeaderNames.Authorization];
-            if (!string.IsNullOrEmpty(authorization) && authorization.StartsWith("Bearer "))
-                return JwtBearerDefaults.AuthenticationScheme;
+            
+            if (!string.IsNullOrEmpty(authorization))
+            {
+                if (authorization.StartsWith("Bearer "))
+                {
+                    return JwtBearerDefaults.AuthenticationScheme;
+                }
+                else if (authorization.StartsWith("X-Api-Key"))
+                {
+                    return ApiKeyAuthenticationOptions.DefaultScheme;
+                }
+            }
 
             // otherwise always check for cookie auth
             return CookieAuthenticationDefaults.AuthenticationScheme;
@@ -94,21 +109,27 @@ builder.Services.AddAuthorization();
 builder.Services.AddSingleton<IAuthorizationHandler, DebugRoleAuthorizationHandler>();
 
 builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("APIUser", policy =>
+    {
+        policy.AuthenticationSchemes.Add("API_JWT_OR_COOKIE");
+        policy.RequireAuthenticatedUser();
+        policy.RequireRole("APIUser");
+    })
     .AddPolicy("BasicUser", policy =>
     {
-        policy.AuthenticationSchemes.Add("JWT_OR_COOKIE");
+        policy.AuthenticationSchemes.Add("API_JWT_OR_COOKIE");
         policy.RequireAuthenticatedUser();
         policy.RequireRole("BasicUser");
     })
     .AddPolicy("User", policy =>
     {
-        policy.AuthenticationSchemes.Add("JWT_OR_COOKIE");
+        policy.AuthenticationSchemes.Add("API_JWT_OR_COOKIE");
         policy.RequireAuthenticatedUser();
         policy.RequireRole("User");
     })
     .AddPolicy("Admin", policy =>
     {
-        policy.AuthenticationSchemes.Add("JWT_OR_COOKIE");
+        policy.AuthenticationSchemes.Add("API_JWT_OR_COOKIE");
         policy.RequireAuthenticatedUser();
         policy.RequireRole("Admin");
     });
@@ -133,10 +154,12 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddDbContext<UserDbContext>(options =>
     options.UseSqlite("Filename=users.db"));
 
+builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
-builder.Logging.AddFilter("Microsoft.AspNetCore.Authentication", LogLevel.Trace);
+builder.Logging.AddFilter("Microsoft.AspNetCore.AuthenticationAndAuthorization", LogLevel.Trace);
 builder.Logging.AddFilter("Microsoft.AspNetCore.DataProtection", LogLevel.Trace);
 
 var app = builder.Build();
@@ -158,45 +181,51 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapPost("/login",
-    [Authorize(Policy = "BasicUser")](HttpContext context,
+    [Authorize(Policy = "BasicUser")] async (HttpContext context,
+        ILogger<Program> logger,
         IUserRepository userRepository,
+        IMapper mapper,
         [FromBody] LoginModel loginModel) =>
     {
         if (context.User.Identity is not { IsAuthenticated: true })
             return Results.Unauthorized();
         
-        var user = userRepository.GetUserByEmailAndPassword(loginModel.Username, loginModel.Password);
+        var user = await userRepository.GetUserByEmailAndPasswordAsync(loginModel.Username, loginModel.Password);
         
         if (user == null)
         {
             return Results.Unauthorized();
         }
-        
-        var token = JwtHelper.GetJwtToken(
-            user.Name,
-            jwtSecurityKey,
-            jwtIssuer,
-            jwtAudience,
-            TimeSpan.FromDays(30),
-            new[]
-            {
-                new(ClaimTypes.Name, user.Name),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, "User"),
-            });
 
-        var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-
-        Console.WriteLine($"JWT: {jwt}");
-
-        return Results.Json(new UserInfo
+        try
         {
-            Name = user.Name,
-            Email = user.Email,
-            Role = "User",
-            Jwt = jwt
-        });
+            var userInfo = mapper.Map<UserInfo>(user);
+
+            var token = JwtHelper.GetJwtToken(
+                user.Name,
+                jwtSecurityKey,
+                jwtIssuer,
+                jwtAudience,
+                TimeSpan.FromDays(30),
+                userInfo.Claims().ToArray()
+            );
+
+            userInfo.Jwt = new JwtSecurityTokenHandler().WriteToken(token);
+            logger.LogInformation("JWT: {jwt}", userInfo.Jwt);
+            return Results.Json(userInfo);
+        }
+        catch (AutoMapperMappingException ex)
+        {
+            return Results.Problem();
+        }
     });
+
+app.MapGet("/user/{id}", [Authorize(Policy = "APIUser")]
+    async (IUserRepository userRepository, string id) =>
+{
+    var user = await userRepository.GetUserByIdAsync(id);
+    return user != null ? Results.Json(user) : Results.NotFound();
+});
 
 app.MapGet("/secure-user",
     [Authorize(Policy = "User")](HttpContext context) =>

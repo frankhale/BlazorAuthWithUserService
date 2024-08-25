@@ -8,10 +8,11 @@
         <div>
             <b>User Claims</b>
             <ul>
+                <li>Id - @context.User.Claims.FirstOrDefault(c => c.Type == "id")?.Value</li>
                 <li>Name - @context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value</li>
                 <li>Email - @context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value</li>
                 <li>Role - @context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value</li>
-                <li>Jwt - @((context.User.Claims.FirstOrDefault(c => c.Type == "Jwt")?.Value)?[..10])...</li>
+                <li>Jwt - @((context.User.Claims.FirstOrDefault(c => c.Type == "jwt")?.Value)?[..10])...</li>
             </ul>
         </div>
         

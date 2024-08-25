@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UserService.Data;
 
@@ -10,34 +11,14 @@ using UserService.Data;
 namespace UserService.Migrations
 {
     [DbContext(typeof(UserDbContext))]
-    partial class UserDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240825195717_AddRole")]
+    partial class AddRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
-
-            modelBuilder.Entity("UserService.Data.Entities.ApiKey", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("Value")
-                        .HasMaxLength(32)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ApiKeys");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("e7f041a9-4807-449b-8aed-6a2ae390ad16"),
-                            Value = new Guid("10000000-1000-1000-1000-100000000000")
-                        });
-                });
 
             modelBuilder.Entity("UserService.Data.Entities.User", b =>
                 {
@@ -72,7 +53,7 @@ namespace UserService.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("9c412394-9559-471d-9c4c-d44381112a7f"),
+                            Id = new Guid("7cace465-2563-46b3-b652-8a5c76cf8897"),
                             Email = "fred.smith@example.com",
                             Name = "Fred Smith",
                             Password = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",

@@ -37,11 +37,14 @@ internal sealed class PersistingRevalidatingAuthenticationStateProvider : Revali
     protected override Task<bool> ValidateAuthenticationStateAsync(
         AuthenticationState authenticationState, CancellationToken cancellationToken)
     {
-        // Get the user manager from a new scope to ensure it fetches fresh data
-        //await using var scope = scopeFactory.CreateAsyncScope();
-        //var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        //return await ValidateSecurityStampAsync(userManager, authenticationState.User);
+        // var user = authenticationState.User;
+        // if (user.Identity is not { IsAuthenticated: true })
+        // {
+        //     Task.FromResult(false); // User is not authenticated
+        // }
 
+        // TODO: Look up user by calling an API in the user service to validate user
+        
         return Task.FromResult(true);
     }
 
@@ -54,7 +57,7 @@ internal sealed class PersistingRevalidatingAuthenticationStateProvider : Revali
     {
         if (_authenticationStateTask is null)
         {
-            throw new UnreachableException($"Authentication state not set in {nameof(OnPersistingAsync)}().");
+            throw new UnreachableException($"AuthenticationAndAuthorization state not set in {nameof(OnPersistingAsync)}().");
         }
 
         var authenticationState = await _authenticationStateTask;
@@ -62,20 +65,11 @@ internal sealed class PersistingRevalidatingAuthenticationStateProvider : Revali
 
         if (principal.Identity?.IsAuthenticated == true)
         {
-            var name = principal.FindFirst(ClaimTypes.Name)?.Value;
-            var email = principal.FindFirst(ClaimTypes.Email)?.Value;
-            var role = principal.FindFirst(ClaimTypes.Role)?.Value;
-            var jwt = principal.FindFirst("Jwt")?.Value;
+            var userInfo = principal.ToUserInfo();
 
-            if (name != null && email != null && role != null)
+            if(userInfo != null)
             {
-                _state.PersistAsJson(nameof(UserInfo), new UserInfo
-                {
-                    Name = name,
-                    Email = email,
-                    Role = role,
-                    Jwt = jwt
-                });
+                _state.PersistAsJson(nameof(UserInfo), userInfo);
             }
         }
     }

@@ -2,7 +2,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 
-namespace UserService;
+namespace UserService.AuthenticationAndAuthorization;
 
 public class DebugRoleAuthorizationHandler(ILogger<DebugRoleAuthorizationHandler> logger)
     : AuthorizationHandler<RolesAuthorizationRequirement>

@@ -1,11 +1,11 @@
-﻿namespace UserService;
+﻿namespace UserService.Middleware;
 
 public class RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
 {
     public async Task InvokeAsync(HttpContext context)
     {
         // Log the request details
-        LogRequest(context);
+        await LogRequest(context);
 
         // Call the next middleware in the pipeline
         await next(context);

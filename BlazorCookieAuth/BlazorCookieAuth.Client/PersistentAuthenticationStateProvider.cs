@@ -19,15 +19,8 @@ namespace BlazorCookieAuth.Client
                 return;
             }
 
-            Claim[] claims = [
-                new Claim(ClaimTypes.Name, userInfo.Name),
-                new Claim(ClaimTypes.Email, userInfo.Email),
-                new Claim(ClaimTypes.Role, userInfo.Role),
-                new Claim("Jwt", userInfo.Jwt ?? "Not Set"),
-            ];
-
             _authenticationStateTask = Task.FromResult(
-                new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims,
+                new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(userInfo.Claims(),
                     authenticationType: nameof(PersistentAuthenticationStateProvider)))));
         }
 

@@ -16,7 +16,7 @@
 
         if (!string.IsNullOrEmpty(authCookie))
         {
-            Logger.LogInformation(authCookie);
+            Logger.LogInformation($"BlazorAuthCookie: {authCookie}");
 
             var loginInfo = LoginHelper.GetLogin(authCookie);
 
@@ -51,18 +51,10 @@
 
                     if (userInfo?.Name != null)
                     {
-                        var claims = new List<Claim>
-                        {
-                            new Claim(ClaimTypes.Name, userInfo.Name),
-                            new Claim(ClaimTypes.Email, userInfo.Email),
-                            new Claim(ClaimTypes.Role, userInfo.Role),
-                            new Claim("Jwt", userInfo.Jwt ?? "Not Set"),
-                        };
-
                         await HttpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
                         var claimsIdentity = new ClaimsIdentity(
-                            claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                            userInfo.Claims(), CookieAuthenticationDefaults.AuthenticationScheme);
 
                         await HttpContextAccessor.HttpContext.SignInAsync(
                             CookieAuthenticationDefaults.AuthenticationScheme,
