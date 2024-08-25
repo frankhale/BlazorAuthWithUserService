@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
@@ -11,6 +12,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using UserService;
+using UserService.Data;
+using UserService.Data.Repository;
 using SameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode;
 
 var jwtIssuer = Environment.GetEnvironmentVariable("JwtIssuer");
@@ -126,6 +129,10 @@ builder.Services.AddCors(options =>
         });
 });
 
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddDbContext<UserDbContext>(options =>
+    options.UseSqlite("Filename=users.db"));
+
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
@@ -151,39 +158,30 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapPost("/login",
-    [Authorize(Policy = "BasicUser")](HttpContext context, [FromBody] LoginModel loginModel) =>
+    [Authorize(Policy = "BasicUser")](HttpContext context,
+        IUserRepository userRepository,
+        [FromBody] LoginModel loginModel) =>
     {
         if (context.User.Identity is not { IsAuthenticated: true })
             return Results.Unauthorized();
         
-        // FIXME: Hard coded for now
-        if (loginModel.Username != "a@b.com" && loginModel.Password != "test")
+        var user = userRepository.GetUserByEmailAndPassword(loginModel.Username, loginModel.Password);
+        
+        if (user == null)
         {
             return Results.Unauthorized();
         }
-        
-        var email = context.User.FindFirstValue(ClaimTypes.Email);
-
-        if (string.IsNullOrEmpty(email))
-        {
-            return Results.Unauthorized();
-        }
-
-        // TODO: Add DB logic to look up user
-        
-        // FIXME: Hard coded for now
-        var userName = "John Doe";
         
         var token = JwtHelper.GetJwtToken(
-            userName,
+            user.Name,
             jwtSecurityKey,
             jwtIssuer,
             jwtAudience,
-            TimeSpan.FromMinutes(60),
+            TimeSpan.FromDays(30),
             new[]
             {
-                new(ClaimTypes.Name, userName),
-                new Claim(ClaimTypes.Email, email),
+                new(ClaimTypes.Name, user.Name),
+                new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, "User"),
             });
 
@@ -193,8 +191,8 @@ app.MapPost("/login",
 
         return Results.Json(new UserInfo
         {
-            Name = userName,
-            Email = email,
+            Name = user.Name,
+            Email = user.Email,
             Role = "User",
             Jwt = jwt
         });

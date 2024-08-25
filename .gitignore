@@ -5,6 +5,11 @@
 
 .idea/
 
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+
 # User-specific files
 *.rsuser
 *.suo
