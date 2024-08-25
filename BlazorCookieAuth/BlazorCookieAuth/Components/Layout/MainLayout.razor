@@ -7,7 +7,7 @@
 
     <main>
         <div class="top-row px-4">
-            <AuthorizeView>
+            <AuthorizeView Roles="User">
                 <Authorized>
                     @context.User.Identity?.Name
                 </Authorized>

@@ -3,7 +3,7 @@
 
 <PageTitle>Home</PageTitle>
 
-<AuthorizeView>
+<AuthorizeView Roles="User">
     <Authorized>
         <h1>Hello, @context.User.Identity?.Name!</h1>
         <div>

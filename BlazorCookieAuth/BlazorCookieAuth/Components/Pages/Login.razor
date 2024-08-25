@@ -77,7 +77,7 @@
 
             HttpContextAccessor.HttpContext!.Response.Headers.TryGetValue("Set-Cookie", out var setCookie);
             var authCookie = setCookie[1]!.Split(";")[0].Replace("BlazorCookieAuth=", "");
-            LoginHelper.LoginLookup[authCookie] = LoginInput;
+            LoginHelper.SetLogin(authCookie, LoginInput);
 
             // We need cookie to be available to send to the backend User Service so
             // we navigate to the /spinner page which will make the call out to the

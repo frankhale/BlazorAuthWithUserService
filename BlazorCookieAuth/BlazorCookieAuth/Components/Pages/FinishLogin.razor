@@ -1,4 +1,5 @@
 ﻿@page "/FinishLogin"
+@using System.Diagnostics
 @layout EmptyLayout
 
 @inject ILogger<Login> Logger
@@ -17,69 +18,67 @@
         {
             Logger.LogInformation(authCookie);
 
-            if (LoginHelper.LoginLookup[authCookie] == null)
+            var loginInfo = LoginHelper.GetLogin(authCookie);
+
+            if (loginInfo?.LoginModel != null)
             {
-                NavigationManager.NavigateTo("/Login");
-            }
-            
-            var userServiceClient = HttpClientFactory.CreateClient("MyHttpClient");
-            var cookieHeader = new CookieHeaderValue("BlazorCookieAuth", authCookie);
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7000/login");
-            request.Content = JsonContent.Create(LoginHelper.LoginLookup[authCookie]);
-            request.Headers.Add("Cookie", cookieHeader.ToString());
-            var response = await userServiceClient.SendAsync(request);
+                var userServiceClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var cookieHeader = new CookieHeaderValue("BlazorCookieAuth", authCookie);
+                var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7000/login");
+                request.Content = JsonContent.Create(loginInfo.LoginModel);
+                request.Headers.Add("Cookie", cookieHeader.ToString());
+                var response = await userServiceClient.SendAsync(request);
 
-            LoginHelper.LoginLookup[authCookie] = null;
-            
-            if (response.IsSuccessStatusCode)
-            {
-                var responseData = await response.Content.ReadAsStringAsync();
+                LoginHelper.RemoveLogin(authCookie);
 
-                var userInfo = JsonSerializer.Deserialize<UserInfo>(responseData, new JsonSerializerOptions
+                if (response.IsSuccessStatusCode)
                 {
-                    PropertyNameCaseInsensitive = true
-                });
+                    var responseData = await response.Content.ReadAsStringAsync();
 
-                if (userInfo == null)
-                {
-                    NavigationManager.NavigateTo("/Forbidden");
-                }
-
-                Logger.LogInformation($"Name: {userInfo?.Name}");
-                Logger.LogInformation($"Email: {userInfo?.Email}");
-                Logger.LogInformation($"Role: {userInfo?.Role}");
-
-                if (userInfo?.Name != null)
-                {
-                    var claims = new List<Claim>
+                    var userInfo = JsonSerializer.Deserialize<UserInfo>(responseData, new JsonSerializerOptions
                     {
-                        new Claim(ClaimTypes.Name, userInfo.Name),
-                        new Claim(ClaimTypes.Email, userInfo.Email),
-                        new Claim(ClaimTypes.Role, userInfo.Role),
-                        new Claim("Jwt", userInfo.Jwt ?? "Not Set"),
-                    };
-                    
-                    await HttpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                        PropertyNameCaseInsensitive = true
+                    });
 
-                    var claimsIdentity = new ClaimsIdentity(
-                        claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                    if (userInfo == null)
+                    {
+                        NavigationManager.NavigateTo("/Forbidden");
+                    }
 
-                    await HttpContextAccessor.HttpContext.SignInAsync(
-                        CookieAuthenticationDefaults.AuthenticationScheme,
-                        new ClaimsPrincipal(claimsIdentity),
-                        new AuthenticationProperties
+                    Logger.LogInformation($"Name: {userInfo?.Name}");
+                    Logger.LogInformation($"Email: {userInfo?.Email}");
+                    Logger.LogInformation($"Role: {userInfo?.Role}");
+
+                    if (userInfo?.Name != null)
+                    {
+                        var claims = new List<Claim>
                         {
-                            AllowRefresh = true,
-                            IsPersistent = true
-                        });
+                            new Claim(ClaimTypes.Name, userInfo.Name),
+                            new Claim(ClaimTypes.Email, userInfo.Email),
+                            new Claim(ClaimTypes.Role, userInfo.Role),
+                            new Claim("Jwt", userInfo.Jwt ?? "Not Set"),
+                        };
+
+                        await HttpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+                        var claimsIdentity = new ClaimsIdentity(
+                            claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                        await HttpContextAccessor.HttpContext.SignInAsync(
+                            CookieAuthenticationDefaults.AuthenticationScheme,
+                            new ClaimsPrincipal(claimsIdentity),
+                            new AuthenticationProperties
+                            {
+                                AllowRefresh = true,
+                                IsPersistent = true
+                            });
+                    }
+
+                    NavigationManager.NavigateTo("/");
                 }
-                
-                NavigationManager.NavigateTo("/");
             }
-            else
-            {
-                NavigationManager.NavigateTo("/Forbidden");
-            }
+            
+            NavigationManager.NavigateTo("/Forbidden");
         }
     }
 
