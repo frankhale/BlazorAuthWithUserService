@@ -1,9 +1,9 @@
-using System.Net;
 using BlazorCookieAuth;
 using BlazorCookieAuth.Components;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.DataProtection;
+using System.Net;
 
 var dataProtectionSharedFolder = Environment.GetEnvironmentVariable("DataProtectionFolder");
 
@@ -15,6 +15,8 @@ if (string.IsNullOrEmpty(dataProtectionSharedFolder))
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpContextAccessor();
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
@@ -22,6 +24,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
+builder.Services.AddSingleton<LoginHelper>();
 
 builder.Services.AddHttpClient("MyHttpClient")
     .AddHttpMessageHandler(() => new HttpClientLoggingHandler())
@@ -43,6 +46,12 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.Name = "BlazorCookieAuth";
+        
+        options.Events.OnRedirectToLogin = opt =>
+        {
+            opt.HttpContext.Response.Redirect("/login");
+            return Task.CompletedTask;
+        };
     });
 
 builder.Services.AddAuthorizationBuilder()
@@ -65,8 +74,6 @@ builder.Services.AddAuthorizationBuilder()
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionSharedFolder))
     .SetApplicationName("BlazorCookieAuth");
-
-builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

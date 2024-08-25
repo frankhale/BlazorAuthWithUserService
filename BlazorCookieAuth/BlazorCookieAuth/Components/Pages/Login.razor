@@ -1,9 +1,9 @@
 ﻿@page "/Login"
 
-@using System.ComponentModel.DataAnnotations
-
 @* @inject ILogger<Login> Logger *@
+@inject LoginHelper LoginHelper
 @inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
 
 <PageTitle>Log in</PageTitle>
 
@@ -12,26 +12,20 @@
 <div class="row">
     <div class="col-md-4">
         <section>
-            <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+            <EditForm Model="LoginInput" method="post" OnValidSubmit="LoginUser" FormName="login">
                 <DataAnnotationsValidator />
                 <h2>Use a local account to log in.</h2>
                 <hr />
                 <ValidationSummary class="text-danger" role="alert" />
                 <div class="form-floating mb-3">
-                    <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                    <InputText @bind-Value="LoginInput.Username" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
                     <label class="form-label">Email</label>
-                    <ValidationMessage For="() => Input.Email" class="text-danger" />
+                    <ValidationMessage For="() => LoginInput.Username" class="text-danger" />
                 </div>
                 <div class="form-floating mb-3">
-                    <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+                    <InputText type="password" @bind-Value="LoginInput.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
                     <label class="form-label">Password</label>
-                    <ValidationMessage For="() => Input.Password" class="text-danger" />
-                </div>
-                <div class="checkbox mb-3">
-                    <label class="form-label">
-                        <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
-                        Remember me
-                    </label>
+                    <ValidationMessage For="() => LoginInput.Password" class="text-danger" />
                 </div>
                 <div>
                     <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
@@ -42,67 +36,59 @@
 </div>
 
 @code {
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
     [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = new();
-
-    [SupplyParameterFromQuery]
-    private string? ReturnUrl { get; set; }
+    private LoginModel LoginInput { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
-        if (HttpMethods.IsGet(HttpContext.Request.Method))
+        if (HttpContextAccessor.HttpContext != null)
         {
             // Clear the existing external cookie to ensure a clean login process
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         }
     }
 
     public async Task LoginUser()
     {
-        if (Input.Email != "a@b.com" && Input.Password != "test")
-        {
-            NavigationManager.NavigateTo("/Forbidden");
-        }
-
+        // if (LoginInput.Username != "a@b.com" && LoginInput.Password != "test")
+        // {
+        //     NavigationManager.NavigateTo("/Forbidden");
+        // }
+      
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Name, "John Doe"),
-            new(ClaimTypes.Email, Input.Email),
+            new(ClaimTypes.Email, LoginInput.Username),
             new(ClaimTypes.Role, "BasicUser"),
         };
 
         var claimsIdentity = new ClaimsIdentity(
             claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(claimsIdentity),
-            new AuthenticationProperties
-            { 
-                AllowRefresh = true,
-                IsPersistent = true
-            });
-        
-        // We need cookie to be available to send to the backend User Service so
-        // we navigate to the /spinner page which will make the call out to the
-        // User Service and get all of the claims for this user
-        NavigationManager.NavigateTo("/Spinner");
+
+        if (HttpContextAccessor.HttpContext != null)
+        {
+            await HttpContextAccessor.HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity),
+                new AuthenticationProperties
+                {
+                    AllowRefresh = true,
+                    IsPersistent = true
+                });
+
+            HttpContextAccessor.HttpContext!.Response.Headers.TryGetValue("Set-Cookie", out var setCookie);
+            var authCookie = setCookie[1]!.Split(";")[0].Replace("BlazorCookieAuth=", "");
+            LoginHelper.LoginLookup[authCookie] = LoginInput;
+
+            // We need cookie to be available to send to the backend User Service so
+            // we navigate to the /spinner page which will make the call out to the
+            // User Service and get all of the claims for this user. This is silliness
+            // so that we can have a spinner page show while the API is called.
+            NavigationManager.NavigateTo("/Spinner");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/Forbidden");
+        }
     }
 
-    private sealed class InputModel
-    {
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = "";
-
-        [Required]
-        [DataType(DataType.Password)]
-        public string Password { get; set; } = "";
-
-        [Display(Name = "Remember me?")]
-        public bool RememberMe { get; set; }
-    }
 }

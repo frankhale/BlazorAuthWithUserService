@@ -1,14 +1,15 @@
-using System.IdentityModel.Tokens.Jwt;
 using Common;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.OpenApi.Models;
-using System.Security.Claims;
-using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
+using Microsoft.OpenApi.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using UserService;
 using SameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode;
 
@@ -125,8 +126,6 @@ builder.Services.AddCors(options =>
         });
 });
 
-//builder.Services.AddFluxor();
-
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
@@ -146,28 +145,35 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseCors("AllowLocalHost");
-
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("/login",
-    [Authorize(Policy = "BasicUser")](HttpContext context) =>
+app.MapPost("/login",
+    [Authorize(Policy = "BasicUser")](HttpContext context, [FromBody] LoginModel loginModel) =>
     {
         if (context.User.Identity is not { IsAuthenticated: true })
             return Results.Unauthorized();
-
-        var userName = context.User.FindFirstValue(ClaimTypes.Name);
+        
+        // FIXME: Hard coded for now
+        if (loginModel.Username != "a@b.com" && loginModel.Password != "test")
+        {
+            return Results.Unauthorized();
+        }
+        
         var email = context.User.FindFirstValue(ClaimTypes.Email);
 
-        if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(email))
+        if (string.IsNullOrEmpty(email))
         {
             return Results.Unauthorized();
         }
 
-        // create a new token with token helper and add our claim
+        // TODO: Add DB logic to look up user
+        
+        // FIXME: Hard coded for now
+        var userName = "John Doe";
+        
         var token = JwtHelper.GetJwtToken(
             userName,
             jwtSecurityKey,
@@ -176,7 +182,7 @@ app.MapGet("/login",
             TimeSpan.FromMinutes(60),
             new[]
             {
-                new Claim(ClaimTypes.Name, userName),
+                new(ClaimTypes.Name, userName),
                 new Claim(ClaimTypes.Email, email),
                 new Claim(ClaimTypes.Role, "User"),
             });

@@ -2,6 +2,7 @@
 @layout EmptyLayout
 
 @inject ILogger<Login> Logger
+@inject LoginHelper LoginHelper
 @inject NavigationManager NavigationManager
 @inject IHttpClientFactory HttpClientFactory
 @inject IHttpContextAccessor HttpContextAccessor 
@@ -16,12 +17,20 @@
         {
             Logger.LogInformation(authCookie);
 
+            if (LoginHelper.LoginLookup[authCookie] == null)
+            {
+                NavigationManager.NavigateTo("/Login");
+            }
+            
             var userServiceClient = HttpClientFactory.CreateClient("MyHttpClient");
-            var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7000/login");
             var cookieHeader = new CookieHeaderValue("BlazorCookieAuth", authCookie);
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7000/login");
+            request.Content = JsonContent.Create(LoginHelper.LoginLookup[authCookie]);
             request.Headers.Add("Cookie", cookieHeader.ToString());
             var response = await userServiceClient.SendAsync(request);
 
+            LoginHelper.LoginLookup[authCookie] = null;
+            
             if (response.IsSuccessStatusCode)
             {
                 var responseData = await response.Content.ReadAsStringAsync();
@@ -37,8 +46,8 @@
                 }
 
                 Logger.LogInformation($"Name: {userInfo?.Name}");
-                Logger.LogInformation($"Name: {userInfo?.Email}");
-                Logger.LogInformation($"Name: {userInfo?.Role}");
+                Logger.LogInformation($"Email: {userInfo?.Email}");
+                Logger.LogInformation($"Role: {userInfo?.Role}");
 
                 if (userInfo?.Name != null)
                 {
