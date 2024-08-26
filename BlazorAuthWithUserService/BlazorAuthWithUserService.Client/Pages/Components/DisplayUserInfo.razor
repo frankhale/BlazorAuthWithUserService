@@ -1,0 +1,26 @@
+﻿@using System.Security.Claims
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<h1>Hello, @_user.Identity?.Name!</h1>
+<div>
+    <b>User Claims</b>
+    <ul>
+        <li>Id - @_user.Claims.FirstOrDefault(c => c.Type == "id")?.Value</li>
+        <li>Name - @_user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value</li>
+        <li>Email - @_user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value</li>
+        <li>Role - @_user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value</li>
+        <li>Jwt - @((_user.Claims.FirstOrDefault(c => c.Type == "jwt")?.Value)?[..10])...</li>
+    </ul>
+</div>
+
+@code {
+    private ClaimsPrincipal _user = default!;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _user = authenticationState.User;
+    }
+
+}
