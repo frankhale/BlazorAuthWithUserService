@@ -1,5 +1,5 @@
-using BlazorCookieAuth;
-using BlazorCookieAuth.Components;
+using BlazorAuthWithUserService;
+using BlazorAuthWithUserService.Components;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.DataProtection;
@@ -97,6 +97,6 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()
-    .AddAdditionalAssemblies(typeof(BlazorCookieAuth.Client._Imports).Assembly);
+    .AddAdditionalAssemblies(typeof(BlazorAuthWithUserService.Client._Imports).Assembly);
 
 app.Run();

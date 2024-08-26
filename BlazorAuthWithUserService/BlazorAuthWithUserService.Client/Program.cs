@@ -1,4 +1,4 @@
-using BlazorCookieAuth.Client;
+using BlazorAuthWithUserService.Client;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 

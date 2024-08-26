@@ -1,6 +1,6 @@
 ﻿using Common;
 
-namespace BlazorCookieAuth;
+namespace BlazorAuthWithUserService;
 
 public sealed record LoginInfo(LoginModel? LoginModel, DateTime CreatedAt);
 

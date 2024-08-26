@@ -3,7 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 
-namespace BlazorCookieAuth.Client
+namespace BlazorAuthWithUserService.Client
 {
     internal class PersistentAuthenticationStateProvider : AuthenticationStateProvider
     {

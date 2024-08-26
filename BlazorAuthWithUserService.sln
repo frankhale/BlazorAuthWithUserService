@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35122.118
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorCookieAuth", "BlazorCookieAuth\BlazorCookieAuth\BlazorCookieAuth.csproj", "{5CFC8CCD-555A-402B-BA4A-3C9BABDFFD11}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorAuthWithUserService", "BlazorAuthWithUserService\BlazorAuthWithUserService\BlazorAuthWithUserService.csproj", "{5CFC8CCD-555A-402B-BA4A-3C9BABDFFD11}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorCookieAuth.Client", "BlazorCookieAuth\BlazorCookieAuth.Client\BlazorCookieAuth.Client.csproj", "{B5C01049-8FAA-4736-AF75-8EE1A2ED4BE4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorAuthWithUserService.Client", "BlazorAuthWithUserService\BlazorAuthWithUserService.Client\BlazorAuthWithUserService.Client.csproj", "{B5C01049-8FAA-4736-AF75-8EE1A2ED4BE4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserService", "UserService\UserService.csproj", "{4E3C18B1-E97E-490B-B14A-0F01DFACA7EE}"
 EndProject

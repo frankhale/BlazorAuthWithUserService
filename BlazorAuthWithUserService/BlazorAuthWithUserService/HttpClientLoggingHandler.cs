@@ -1,4 +1,4 @@
-﻿namespace BlazorCookieAuth;
+﻿namespace BlazorAuthWithUserService;
 
 public class HttpClientLoggingHandler() : DelegatingHandler
 {
