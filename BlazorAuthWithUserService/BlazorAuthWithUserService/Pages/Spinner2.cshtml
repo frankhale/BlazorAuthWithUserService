@@ -1,0 +1,35 @@
+﻿@page "/spinner2"
+@model BlazorAuthWithUserService.Pages.Spinner2
+
+@{
+    ViewData["Title"] = "Spinner2";
+    Layout = "_Layout";
+}
+
+<style>
+    body, html {
+        height: 100%;
+        margin: 0;
+    }
+
+    .spinner-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+</style>
+
+@section scripts {
+<script type="text/javascript">
+    setTimeout(function () {
+        window.location.href = '@Url.Page("/FinishLogin2")';
+    }, 1000); 
+</script>
+}
+
+<div class="spinner-wrapper">
+    <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>

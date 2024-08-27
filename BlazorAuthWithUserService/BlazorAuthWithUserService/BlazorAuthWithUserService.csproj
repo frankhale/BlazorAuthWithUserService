@@ -12,4 +12,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.8" />
   </ItemGroup>
 
+  <ItemGroup>
+    <AdditionalFiles Include="Pages\Login2.cshtml" />
+    <AdditionalFiles Include="Pages\Shared\_Layout.cshtml" />
+  </ItemGroup>
+
 </Project>

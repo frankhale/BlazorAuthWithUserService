@@ -16,8 +16,7 @@ if (string.IsNullOrEmpty(dataProtectionSharedFolder))
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpContextAccessor();
-
-// Add services to the container.
+builder.Services.AddRazorPages();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
@@ -25,7 +24,6 @@ builder.Services.AddRazorComponents()
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
 builder.Services.AddSingleton<LoginHelper>();
-
 builder.Services.AddHttpClient("MyHttpClient")
     .AddHttpMessageHandler(() => new HttpClientLoggingHandler())
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
@@ -46,7 +44,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.Name = "BlazorCookieAuth";
-        
         options.Events.OnRedirectToLogin = opt =>
         {
             opt.HttpContext.Response.Redirect("/login");
@@ -90,9 +87,11 @@ else
 }
 
 app.UseAuthentication();
+app.UseRouting();
 app.UseAuthorization();
 app.UseStaticFiles();
 app.UseAntiforgery();
+app.MapRazorPages();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()

@@ -1,6 +1,5 @@
 using Common;
 using System.Diagnostics;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
@@ -8,18 +7,13 @@ using Microsoft.AspNetCore.Components.Web;
 
 namespace BlazorAuthWithUserService;
 
-// This is a server-side AuthenticationStateProvider that revalidates the security stamp for the connected user
-// every 30 minutes an interactive circuit is connected. It also uses PersistentComponentState to flow the
-// authentication state to the client which is then fixed for the lifetime of the WebAssembly application.
 internal sealed class PersistingRevalidatingAuthenticationStateProvider : RevalidatingServerAuthenticationStateProvider
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly PersistentComponentState _state;
-
     private readonly PersistingComponentStateSubscription _subscription;
-
     private Task<AuthenticationState>? _authenticationStateTask;
-
+    
     public PersistingRevalidatingAuthenticationStateProvider(
         ILoggerFactory loggerFactory,
         IServiceScopeFactory serviceScopeFactory,
@@ -30,20 +24,24 @@ internal sealed class PersistingRevalidatingAuthenticationStateProvider : Revali
         _state = persistentComponentState;
         AuthenticationStateChanged += OnAuthenticationStateChanged;
         _subscription = _state.RegisterOnPersisting(OnPersistingAsync, RenderMode.InteractiveWebAssembly);
-    }
+    }   
 
     protected override TimeSpan RevalidationInterval => TimeSpan.FromMinutes(30);
-
+    
     protected override Task<bool> ValidateAuthenticationStateAsync(
         AuthenticationState authenticationState, CancellationToken cancellationToken)
     {
-        // var user = authenticationState.User;
-        // if (user.Identity is not { IsAuthenticated: true })
-        // {
-        //     Task.FromResult(false); // User is not authenticated
-        // }
+        var user = authenticationState.User;
+        if (user.Identity is not { IsAuthenticated: true })
+        {
+            Task.FromResult(false); // User is not authenticated
+        }
 
-        // TODO: Look up user by calling an API in the user service to validate user
+        // using var scope = _scopeFactory.CreateScope();
+        // var httpClientFactory = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>();
+        // var userServiceClient = httpClientFactory.CreateClient("MyHttpClient");
+        
+        // TODO: Finish the client code here so we can call the user API and validate the user account
         
         return Task.FromResult(true);
     }
